@@ -9,8 +9,6 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-
-// Connect to MongoDB
 mongoose.connect('mongodb://localhost/imageDatabase', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('Connected to MongoDB');
@@ -19,7 +17,6 @@ mongoose.connect('mongodb://localhost/imageDatabase', { useNewUrlParser: true, u
     console.error('Error connecting to MongoDB:', error);
   });
 
-// User schema and model
 const userSchema = new mongoose.Schema({
   username: String,
   password: String
@@ -27,7 +24,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Image schema and model
 const imageSchema = new mongoose.Schema({
   data: Buffer,
   hash: String
@@ -35,24 +31,21 @@ const imageSchema = new mongoose.Schema({
 
 const Image = mongoose.model('Image', imageSchema);
 
-// Hash function to compare images
+
 function hashImage(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
-// Email configuration
+
 const transporter = nodemailer.createTransport({
-//   host: 'smtp.example.com', // Replace with your email host
-//   port: 587, // Replace with your email port
-//   secure: false,
+
 service: 'gmail',
   auth: {
-    user: 'goudkowshik560@gmail.com', // Replace with your email address
-    pass: 'qsuvwweaakswjiep' // Replace with your email password
+    user: 'goudkowshik560@gmail.com', 
+    pass: 'qsuvwweaakswjiep' 
   }
 });
 
-// Session configuration
 app.use(
   session({
     secret: 'secret-key',
@@ -62,17 +55,13 @@ app.use(
 );
 
 app.use(bodyParser.urlencoded({ extended: true }));
-// Serve login.html page
 app.get('/login', (req, res) => {
     res.sendFile(__dirname + '/login.html');
   });
-  
-  // Serve signup.html page
   app.get('/signup', (req, res) => {
     res.sendFile(__dirname + '/signup.html');
   });
   
-// Serve the index.html page
 app.get('/', (req, res) => {
   if (req.session.loggedin) {
     res.sendFile(__dirname + '/index.html');
@@ -81,11 +70,9 @@ app.get('/', (req, res) => {
   }
 });
 
-// Route for login
 app.post('/login', async (req, res) => {
   const username = req.body.username;
-  const password = req.body.password;
-
+  const password = req.body.password
   try {
     const user = await User.findOne({ username: username, password: password });
     if (user) {
@@ -100,17 +87,15 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Route for logout
+
 app.get('/logout', (req, res) => {
   req.session.loggedin = false;
   res.redirect('/');
 });
 
-// Route for signup
 app.post('/signup', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
-
   try {
     const existingUser = await User.findOne({ username: username });
     if (existingUser) {
@@ -129,7 +114,6 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// Route for uploading image
 app.post('/upload', upload.single('image'), async (req, res) => {
   if (!req.file) {
     res.status(400).send('No file uploaded.');
@@ -144,10 +128,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const storedImage = await Image.findOne({ hash: uploadedImageHash });
 
     if (storedImage) {
-      // Send email notification with attached image
       const mailOptions = {
-        from: 'goudkowshik560@gmail.com', // Replace with your email address
-        to: 'rangakowshik12@gmail.com', // Replace with the recipient's email address
+        from: 'goudkowshik560@gmail.com', 
+        to: 'rangakowshik12@gmail.com', 
         subject: 'Image Identified',
         text: 'The uploaded image has been identified.',
         attachments: [
